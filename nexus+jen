@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+	tools{
+		'jdk' 'java 8'
+}
+
+    stages {
+        stage('git') {
+            steps {
+                echo 'cloning git'
+		git branch: 'main', url: 'https://github.com/divya4518/mindcircuit-facebook.git'
+
+            }
+        }
+
+ stage('code quality test') {
+            steps {
+                echo 'testing code quality'
+		sh 'mvn clean compile sonar:sonar'           }
+        }
+
+
+ stage('war file') {
+            steps {
+                echo 'generating war file using maven'
+		sh 'mvn clean install'
+
+            }
+        }
+
+ stage('uploading to nexus') {
+            steps {
+                echo 'uploading war file for backup'
+		sh 'mvn clean deploy'
+
+            }
+        }
+
+
+ stage('deploying to tomcat') {
+            steps {
+                echo 'deploying to tomcat'
+		deploy adapters: [tomcat9(credentialsId: '6749ff4a-6fad-4481-a030-d7b958bbd1b9', path: '', url: 'http://100.25.136.106:8081/')], contextPath: 'divya13', war: '**/*.war'
+
+            }
+        }
+    }
+}
